@@ -1,4 +1,5 @@
 const utils = require("../utils")
+const { subtrairHora } = require("../utils")
 
 class HorasTrabalhadasController {
 
@@ -22,20 +23,26 @@ class HorasTrabalhadasController {
 
         if (startsInNightPeriod) {
             result = {
-                totalizadorNoite: (safter22 ? 24 - horaInicialObject.hours : 0) + (endsInNightPeriod ? horaFinalObject.hours : utils.nightPeriod.final),
-                totalizadorDia: horaFinalObject.hours - utils.dayPeriod.initial,
+                totalizadorDia: endsInNightPeriod ? { hours: 0, minutes: 0 } : utils.subtrairHora(horaFinalObject, { hours: utils.dayPeriod.initial, minutes: 0 }),
+                totalizadorNoite: utils.somarHora((safter22 ? utils.subtrairHora({ hours: 24, minutes: 0 }, horaInicialObject) : { hours: 0, minutes: 0 }), (endsInNightPeriod ? horaFinalObject : { hours: utils.nightPeriod.final, minutes: 0 })),
             }
         } else {
-            console.log(!endsInNightPeriod)
-            const dayAditional = horaFinalObject.hours < horaInicialObject.hours ? horaFinalObject.hours - utils.dayPeriod.initial : 0
+            const dayAditional = horaFinalObject.hours < horaInicialObject.hours
+                ? utils.subtrairHora(horaFinalObject, { hours: utils.dayPeriod.initial, minutes: 0 })
+                : { hours: 0, minutes: 0 }
             result = {
+                totalizadorDia: (endsInNightPeriod
+                    ? utils.subtrairHora({ hours: 22, minutes: 0 }, horaInicialObject)
+                    : utils.somarHora(
+                        // utils.subtrairHora({ hours: utils.dayPeriod.final, minutes: 0 }, horaInicialObject)
+                        utils.subtrairHora(horaFinalObject, horaInicialObject)
+                    , dayAditional)),
                 totalizadorNoite: endsInNightPeriod
-                    ?   (eafter0 ? 2 + horaFinalObject.hours : horaFinalObject.hours - 22)
-                    :   (horaFinalObject.hours < horaInicialObject.hours ? 7 : 0),
-                totalizadorDia: !endsInNightPeriod ? utils.dayPeriod.final - horaInicialObject.hours + dayAditional : 22 - horaInicialObject.hours
+                    ? (eafter0 ? utils.somarHora({ hours: 2, minutes: 0 }, horaFinalObject) : utils.subtrairHora(horaFinalObject, { hours: 22, minutes: 0 }))
+                    : (horaFinalObject.hours < horaInicialObject.hours ? { hours: 7, minutes: 0 } : { hours: 0, minutes: 0 }),
             }
         }
-        response.status(200).json(result)
+        response.status(200).json({ horasTrabalhadasDia: utils.toHourString(result.totalizadorDia), horasTrabalhadasNoite: utils.toHourString(result.totalizadorNoite) })
     }
 }
 
