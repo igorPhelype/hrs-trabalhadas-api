@@ -42,7 +42,11 @@ class HorasTrabalhadasController {
                     : (horaFinalObject.hours < horaInicialObject.hours ? { hours: 7, minutes: 0 } : { hours: 0, minutes: 0 }),
             }
         }
-        response.status(200).json({ horasTrabalhadasDia: utils.toHourString(result.totalizadorDia), horasTrabalhadasNoite: utils.toHourString(result.totalizadorNoite) })
+        response.status(200).json({
+            horasTrabalhadasDia: utils.toHourString(result.totalizadorDia),
+            horasTrabalhadasNoite: utils.toHourString(result.totalizadorNoite),
+            horasTrabalhadasTotal: utils.toHourString(utils.somarHora(result.totalizadorDia, result.totalizadorNoite))
+        })
     }
 }
 
